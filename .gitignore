@@ -5,5 +5,13 @@ coverage/
 !.gitignore
 !.travis.yml
 
+npm-debug.log*
+lerna-debug.log*
 bundle.js
 browserify.js
+
+packages/*/index.js
+packages/*/lib/
+
+!packages/node-*/index.js
+!packages/node-*/lib/
