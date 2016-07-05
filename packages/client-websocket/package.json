@@ -9,7 +9,7 @@
     "ws": false
   },
   "dependencies": {
-    "@xmpp/client-connection": "^0.0.0",
+    "@xmpp/connection": "^0.0.0",
     "ws": "^1.1.0"
   }
 }

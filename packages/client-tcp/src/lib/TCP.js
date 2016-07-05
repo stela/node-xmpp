@@ -1,6 +1,6 @@
 import {Socket} from 'net'
 import url from 'url'
-import Connection from '@xmpp/client-connection'
+import Connection from '@xmpp/connection'
 import StreamParser from './StreamParser'
 
 const NS_STREAM = 'http://etherx.jabber.org/streams'
@@ -57,6 +57,7 @@ class TCP extends Connection {
 
 TCP.prototype.Socket = Socket
 TCP.prototype.Parser = StreamParser
+TCP.prototype.NS = 'jabber:client'
 
 export default TCP
 export {NS_STREAM}

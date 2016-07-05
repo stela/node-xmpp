@@ -1,5 +1,5 @@
 import Socket from './Socket'
-import Connection from '@xmpp/client-connection'
+import Connection from '@xmpp/connection'
 
 const NS_FRAMING = 'urn:ietf:params:xml:ns:xmpp-framing'
 
@@ -43,6 +43,7 @@ class WebSocket extends Connection {
 }
 
 WebSocket.prototype.Socket = Socket
+WebSocket.prototype.NS = 'jabber:client'
 
 export default WebSocket
 export {NS_FRAMING}

@@ -57,7 +57,7 @@ export function authenticate (client, credentials, features) {
       if (element.name === 'failure') {
         reject()
       } else if (element.name === 'success') {
-        resolve(client._restart())
+        resolve(client.restart())
       }
 
       client.removeListener('nonza', handler)

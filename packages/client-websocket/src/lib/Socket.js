@@ -7,6 +7,10 @@ class Socket extends EventEmitter {
   }
 
   connect (url, fn) {
+    const sock = this.socket = new WS(url, ['xmpp'])
+    // WS doesn't support removeEventListener
+    sock.removeEventListener = sock.removeEventListener || sock.removeListener
+
     const openHandler = () => {
       if (fn) fn()
       this.emit('connect')
@@ -24,7 +28,6 @@ class Socket extends EventEmitter {
       this.emit('close')
     }
 
-    const sock = this.socket = new WS(url, ['xmpp'])
     sock.addEventListener('open', openHandler)
     sock.addEventListener('message', messageHandler)
     sock.addEventListener('error', errorHandler)

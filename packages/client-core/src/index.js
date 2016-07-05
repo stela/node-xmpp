@@ -1,7 +1,5 @@
-import Entity from '@xmpp/entity'
+import Connection from '@xmpp/connection'
 import url from 'url'
-
-const NS = 'jabber:client'
 
 // we ignore url module from the bundle to reduce its size
 function getHostname (uri) {
@@ -14,7 +12,7 @@ function getHostname (uri) {
   }
 }
 
-class Client extends Entity {
+class Client extends Connection {
   constructor (options) {
     super(options)
     this.transports = []
@@ -30,9 +28,17 @@ class Client extends Entity {
     // FIXME callback?
     if (!Transport) throw new Error('No transport found')
 
-    this.connection = new Transport()
+    const sock = this.socket = new Transport()
 
-    return super.connect(params)
+    ;[
+      'error', 'close', 'connect',
+      'features', 'element', 'stanza',
+      'nonza'
+    ].forEach(e => {
+      sock.on(e, (...args) => this.emit(e, ...args))
+    })
+
+    return sock.connect(params)
       .then(() => {
         this.uri = uri
         return params
@@ -42,21 +48,15 @@ class Client extends Entity {
   open (domain, ...args) {
     domain = domain || getHostname(this.uri)
 
-    return super.open(domain, ...args)
+    return this.socket.open(domain, ...args)
   }
 
-  close () {
-    return super.close()
-  }
-
-  _restart (domain = this._domain) {
-    return this.connection.restart(domain)
-  }
-
-  send (stanza) {
-    return this.connection.send(stanza)
+  get features () { // FIXME remove
+    return this.socket.features
   }
 }
 
-export {NS, getHostname}
+Client.prototype.NS = 'jabber:client'
+
+export {getHostname}
 export default Client
