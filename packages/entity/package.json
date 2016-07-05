@@ -1,14 +1,9 @@
 {
-  "name": "@xmpp/client-core",
+  "name": "@xmpp/entity",
   "repository": "github:node-xmpp/node-xmpp",
   "homepage": "http://github.com/node-xmpp/node-xmpp",
   "bugs": "http://github.com/node-xmpp/node-xmpp/issues",
   "version": "0.0.0",
   "license": "ISC",
-  "dependencies": {
-    "@xmpp/entity": "^0.0.0"
-  },
-  "browser": {
-    "url": false
-  }
+  "dependencies": {}
 }

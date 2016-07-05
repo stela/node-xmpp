@@ -1,12 +1,10 @@
-'use strict'
-
-import EventEmitter from 'events'
+import Entity from '@xmpp/entity'
 import url from 'url'
 
-export const NS = 'jabber:client'
+const NS = 'jabber:client'
 
 // we ignore url module from the bundle to reduce its size
-export function getHostname (uri) {
+function getHostname (uri) {
   if (url.parse) {
     return url.parse(uri).hostname
   } else {
@@ -16,20 +14,11 @@ export function getHostname (uri) {
   }
 }
 
-export default class Client extends EventEmitter {
+class Client extends Entity {
   constructor (options) {
-    super()
-    this.plugins = []
+    super(options)
     this.transports = []
-    this.transport = null
-    this.jid = null
     this.uri = ''
-    this._domain = ''
-    this.options = typeof options === 'object' ? options : {}
-  }
-
-  id () {
-    return Math.random().toString().split('0.')[1]
   }
 
   connect (uri) {
@@ -41,77 +30,33 @@ export default class Client extends EventEmitter {
     // FIXME callback?
     if (!Transport) throw new Error('No transport found')
 
-    const transport = this.transport = new Transport()
-    ;['stream:features', 'close', 'error'].forEach((e) => {
-      transport.on(e, (...args) => this.emit(e, ...args))
-    })
-    transport.on('element', (element) => this._onelement(element))
-    transport.on('close', (element) => this._onclose())
+    this.connection = new Transport()
 
-    return transport
-      .connect(params)
+    return super.connect(params)
       .then(() => {
         this.uri = uri
         return params
       })
   }
 
-  open (params = {}) {
-    if (typeof params === 'string') {
-      params = {domain: params}
-    }
+  open (domain, ...args) {
+    domain = domain || getHostname(this.uri)
 
-    const domain = params.domain || getHostname(this.uri)
-
-    return this.transport
-      .open(domain)
-      .then(features => {
-        this._domain = domain
-        this.features = features
-        this.emit('open', features)
-        return features
-      })
+    return super.open(domain, ...args)
   }
 
   close () {
-    return this.transport.close()
-  }
-
-  _onclose () {
-    delete this._domain
+    return super.close()
   }
 
   _restart (domain = this._domain) {
-    return this.transport.restart(domain)
-  }
-
-  _onelement (element) {
-    this.emit('element', element)
-
-    ;['iq', 'message', 'presence'].some(
-      n => n === element.name
-    )
-      ? this.emit('stanza', element)
-      : this.emit('nonza', element)
+    return this.connection.restart(domain)
   }
 
   send (stanza) {
-    stanza = stanza.root()
-
-    // FIXME move to WebSocket?
-    switch (stanza.name) {
-      case 'iq':
-      case 'presence':
-      case 'message':
-        stanza.attrs.xmlns = stanza.attrs.xmlns || NS
-    }
-
-    this.transport.send(stanza)
-  }
-
-  use (plugin) {
-    if (this.plugins.includes(plugin)) return
-    this.plugins.push(plugin)
-    plugin(this)
+    return this.connection.send(stanza)
   }
 }
+
+export {NS, getHostname}
+export default Client

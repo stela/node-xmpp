@@ -1,10 +1,10 @@
-import Connection from '@xmpp/client-core'
+import _Client from '@xmpp/client-core'
 import plugins from './plugins'
 
 import {bind} from '@xmpp/client-bind'
 import {authenticate} from '@xmpp/client-authentication'
 
-export default class Client extends Connection {
+class Client extends _Client {
   constructor () {
     super()
     // TODO move to client-connection ?
@@ -35,6 +35,4 @@ export default class Client extends Connection {
   }
 }
 
-process.on('unhandledRejection', function (reason, p) {
-  console.log('Possibly Unhandled Rejection at: Promise ', p, ' reason: ', reason)
-})
+export default Client

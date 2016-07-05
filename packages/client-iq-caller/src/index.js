@@ -1,6 +1,4 @@
-'use strict'
-
-export function request (client, stanza, options = {}) {
+function request (client, stanza, options = {}) {
   return new Promise((resolve, reject) => {
     stanza = stanza.root()
     if (!stanza.attrs.id) stanza.attrs.id = client.id()
@@ -14,7 +12,7 @@ export function request (client, stanza, options = {}) {
   })
 }
 
-export function stanzaHandler (stanza) {
+function stanzaHandler (stanza) {
   const id = stanza.attrs.id
   if (
     !stanza.is('iq') ||
@@ -34,9 +32,10 @@ export function stanzaHandler (stanza) {
   delete this._iqHandlers[id]
 }
 
-export function plugin (client) {
+function plugin (client) {
   client._iqHandlers = Object.create(null)
-  client.on('stanza', stanzaHandler.bind(client))
+  client.on('element', stanzaHandler.bind(client))
 }
 
+export {request, stanzaHandler, plugin}
 export default plugin

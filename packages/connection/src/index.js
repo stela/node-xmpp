@@ -36,10 +36,6 @@ class Connection extends EventEmitter {
     this.emit('error', error)
   }
 
-  id () {
-    return Math.random().toString().split('0.')[1]
-  }
-
   send (element) {
     element = element.root()
 
