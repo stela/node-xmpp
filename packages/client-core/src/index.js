@@ -33,7 +33,7 @@ class Client extends Connection {
     ;[
       'error', 'close', 'connect',
       'features', 'element', 'stanza',
-      'nonza'
+      'nonza', 'fragment'
     ].forEach(e => {
       sock.on(e, (...args) => this.emit(e, ...args))
     })

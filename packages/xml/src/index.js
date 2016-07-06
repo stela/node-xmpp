@@ -1,4 +1,4 @@
-import ltx, {Element, parse, nameEqual} from 'ltx'
+import ltx, {Element, parse, nameEqual, escapeXML} from 'ltx'
 
 export {Element, parse}
 
@@ -20,6 +20,22 @@ export function match (a, b) {
   }
   return true
 }
+
+// https://github.com/node-xmpp/ltx/pull/99
+export function tagString (/* [literals], ...substitutions */) {
+  const literals = arguments[0]
+
+  let str = ''
+
+  for (let i = 1; i < arguments.length; i++) {
+    str += literals[i - 1]
+    str += escapeXML(arguments[i])
+  }
+  str += literals[literals.length - 1]
+
+  return str
+}
+
 
 export default ltx
 

@@ -24,7 +24,10 @@ class Connection extends EventEmitter {
     // socket
     const sock = this.socket = socket
     const dataListener = (data) => {
-      this.parser.write(data.toString('utf8'))
+      data = data.toString('utf8')
+      this.parser.write(data)
+      // FIXME only if parser.write ok
+      this.emit('fragment', null, data)
     }
     const closeListener = () => {
       this._domain = ''
@@ -111,7 +114,12 @@ class Connection extends EventEmitter {
 
   write (data) {
     return new Promise((resolve, reject) => {
-      this.socket.write(data.toString().trim(), resolve)
+      data = data.toString('utf8').trim()
+      this.socket.write(data, (err) => {
+        if (err) return reject(err)
+        this.emit('fragment', data)
+        resolve()
+      })
     })
   }
 

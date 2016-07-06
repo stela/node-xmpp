@@ -1,6 +1,7 @@
 import {Socket} from 'net'
 import Connection from '@xmpp/connection'
 import StreamParser from './lib/StreamParser'
+import {tagString} from '@xmpp/xml'
 
 const NS_STREAM = 'http://etherx.jabber.org/streams'
 
@@ -26,7 +27,7 @@ class TCP extends Connection {
 
   // https://xmpp.org/rfcs/rfc6120.html#streams-open
   header (domain, lang) {
-    return `
+    return tagString`
       <?xml version='1.0'?>
       <stream:stream to='${domain}' version='1.0' xml:lang='${lang}' xmlns='${this.NS}' xmlns:stream='${NS_STREAM}'>
     `
