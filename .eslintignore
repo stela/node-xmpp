@@ -5,3 +5,4 @@ packages/*/lib/
 
 node_modules/
 bundle.js
+browserify.js

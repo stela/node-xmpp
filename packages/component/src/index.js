@@ -1,4 +1,6 @@
-import Entity from '@xmpp/entity'
+import Connection from '@xmpp/connection-tcp'
+import url from 'url'
+import crypto from 'crypto'
 
 /*
  * References
@@ -7,46 +9,38 @@ import Entity from '@xmpp/entity'
 
 const NS = 'jabber:component:accept'
 
-class Component extends Entity {
-  constructor (options) {
-    super(options)
+class Component extends Connection {
+  connect (uri) {
+    const {hostname, port} = url.parse(uri)
+    return super.connect({port: port || 5347, hostname})
   }
 
-  connect (params) {
-    this.connection = new TCP() // blabla
-    return super.connect(params)
+  open (...args) {
+    return super.open(...args)
+      // save the stream id for authentication
+      .then(({id}) => this.id = id)
   }
 
-  open (params = {}) {
-    if (typeof params === 'string') {
-      params = {domain: params}
-    }
-
-    const domain = params.domain || getHostname(this.uri)
-
-    return this.transport
-      .open(domain)
-      .then(features => {
-        this._domain = domain
-        this.features = features
-        this.emit('open', features)
-        return features
+  // FIXME move to module?
+  authenticate (password) {
+    return new Promise((resolve, reject) => {
+      // FIXME timeout
+      this.once('nonza', (el) => {
+        if (el.name !== 'handshake') reject(el)
+        else {
+          const jid = super._online(this._domain)
+          resolve(jid)
+        }
       })
-  }
 
-  close () {
-    return this.connection.close()
-  }
-
-  send (stanza) {
-  }
-
-  use (plugin) {
-    if (this.plugins.includes(plugin)) return
-    this.plugins.push(plugin)
-    plugin(this)
+      const hash = crypto.createHash('sha1')
+      hash.update(this.id + password, 'binary')
+      this.write(`<handshake>${hash.digest('hex')}</handshake>`)
+    })
   }
 }
+
+Component.prototype.NS = NS
 
 export {NS}
 export default Component

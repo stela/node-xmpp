@@ -20,7 +20,7 @@ class WebSocket extends Connection {
       if (attrs.from !== domain) return
       if (!attrs.id) return
       // if (!match(el, <open version='1.0' xmlns={NS_FRAMING} from={domain}/>)) return
-      fn()
+      fn(null, attrs, name)
     }
     this.parser.once('element', handler)
   }

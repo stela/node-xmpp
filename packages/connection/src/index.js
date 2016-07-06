@@ -1,5 +1,6 @@
 import EventEmitter from 'events'
 import StreamParser from '@xmpp/streamparser'
+import JID from '@xmpp/jid'
 
 class Connection extends EventEmitter {
   constructor (options) {
@@ -49,6 +50,13 @@ class Connection extends EventEmitter {
     parser.on('error', errorListener)
   }
 
+  _online (jid) {
+    jid = JID(jid)
+    this.emit('online', jid)
+    this.jid = jid
+    return jid
+  }
+
   id () {
     return Math.random().toString().split('0.')[1]
   }
@@ -65,17 +73,21 @@ class Connection extends EventEmitter {
   open (domain, lang = 'en') {
     return new Promise((resolve, reject) => {
       // FIXME timeout
-      this.waitHeader(domain, lang, () => {
+      this.waitHeader(domain, lang, (err, attrs, name) => {
+        if (err) return reject(err)
         this._domain = domain
         this.emit('open')
 
-        // FIXME timeout
-        this.once('element', el => {
+        this.once('nonza', el => {
           if (el.name !== 'stream:features') return // FIXME error
-          this.features = el // FIXME remove that
+          this.features = el
           this.emit('features', el)
-          resolve(el)
+          resolve(attrs, name, el)
         })
+
+        // FIXME that's not guaranteed...
+        // component doesn't use features...
+        process.nextTick(() => resolve(attrs, name))
       })
       this.write(this.header(domain, lang))
     })

@@ -1,6 +1,3 @@
-import EventEmitter from 'events'
-import LtxParser from 'ltx/lib/parsers/ltx'
-import {Element} from 'ltx'
 import _StreamParser from '@xmpp/streamparser'
 
 /*

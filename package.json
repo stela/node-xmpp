@@ -29,7 +29,7 @@
   "scripts": {
     "ava": "ava",
     "make": "lerna exec --scope '@xmpp/*' -- ../../node_modules/.bin/babel src/ -d .",
-    "newtest": "npm run make && npm run ava",
+    "newtest": "npm run make && npm run ava && npm run lint",
     "postinstall": "npm run bootstrap",
     "lint": "eslint .",
     "unit": "mocha --recursive packages/node-*/test/ -t 5000",

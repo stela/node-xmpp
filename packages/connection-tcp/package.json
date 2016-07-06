@@ -1,11 +1,11 @@
 {
-  "name": "@xmpp/client-tcp",
+  "name": "@xmpp/connection-tcp",
   "repository": "github:node-xmpp/node-xmpp",
   "homepage": "http://github.com/node-xmpp/node-xmpp",
   "bugs": "http://github.com/node-xmpp/node-xmpp/issues",
   "version": "0.0.0",
   "license": "ISC",
   "dependencies": {
-    "@xmpp/connection-tcp": "^0.0.0"
+    "@xmpp/streamparser": "^0.0.0"
   }
 }
