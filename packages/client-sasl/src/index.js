@@ -3,9 +3,9 @@
 import SASLFactory from 'saslmechanisms'
 import {encode, decode} from './lib/b64'
 
-export const NS = 'urn:ietf:params:xml:ns:xmpp-sasl'
+const NS = 'urn:ietf:params:xml:ns:xmpp-sasl'
 
-export function getBestMechanism (SASL, mechs, features) {
+function getBestMechanism (SASL, mechs, features) {
   // FIXME preference order ?
   // var SASL = new SASLFactory()
   // mechs.forEach((mech) => {
@@ -23,7 +23,7 @@ export function getBestMechanism (SASL, mechs, features) {
   return SASL.create(mechanisms)
 }
 
-export function authenticate (client, credentials, features) {
+function authenticate (client, credentials, features) {
   const mech = getBestMechanism(client.SASL, client.options.sasl, features)
   if (!mech) return Promise.reject('no compatible mechanism')
 
@@ -74,15 +74,32 @@ export function authenticate (client, credentials, features) {
   })
 }
 
-export function match (features) {
-  return !!features.getChild('mechanisms', NS)
+function match (features) {
+  return features.getChild('mechanisms', NS)
 }
 
-export const authenticator = {authenticate, match, name: 'SASL'}
+// export const authenticator = {authenticate, match, name: 'SASL'}
 
-export function plugin (client) {
+function plugin (client) {
   client.SASL = new SASLFactory()
-  client.authenticators.push(authenticator)
+  // client.authenticators.push(authenticator)
+
+  if (client.registerStreamFeature) {
+    client.registerStreamFeature(streamFeature)
+  }
+}
+
+const streamFeature = {
+  priority: 1000,
+  match,
+  run: (client, features) => {
+    const credentials = {
+      username: client.options.username,
+      password: client.options.password
+    }
+    return authenticate(client, credentials, features)
+  }
 }
 
 export default plugin
+export {NS, getBestMechanism, authenticate, match, plugin, streamFeature}

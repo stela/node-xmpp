@@ -100,6 +100,26 @@ class Connection extends EventEmitter {
     return this.open(...args)
   }
 
+  _write_catch (data) {
+    // FIXME timeout
+    return new Promise((resolve, reject) => {
+      this.once('element', (el) => {
+        resolve(el)
+      })
+      this.write(data).catch(reject)
+    })
+  }
+
+  _send_catch (data) {
+    // FIXME timeout
+    return new Promise((resolve, reject) => {
+      this.once('element', (el) => {
+        resolve(el)
+      })
+      this.send(data).catch(reject)
+    })
+  }
+
   send (element) {
     element = element.root()
 

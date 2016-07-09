@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 
-import authentication from '@xmpp/client-authentication'
+// import authentication from '@xmpp/client-authentication'
+import stream_features from '@xmpp/client-stream-features'
 import bind from '@xmpp/client-bind'
 import sasl from '@xmpp/client-sasl'
 import sasl_anonymous from '@xmpp/client-sasl-anonymous'
@@ -19,7 +20,8 @@ import alternative_connection_methods_http from '@xmpp/client-alternative-connec
 // import session_establisment from '@xmpp/client-session-establishment'
 
 export default [
-  authentication,
+  // authentication,
+  stream_features,
   bind,
   sasl,
   sasl_anonymous,

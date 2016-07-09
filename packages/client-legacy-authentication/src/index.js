@@ -5,22 +5,22 @@
 
 import JID from '@xmpp/jid'
 
-export const NS = 'http://jabber.org/features/iq-auth'
-export const NS_AUTH = 'jabber:iq:auth'
+const NS = 'http://jabber.org/features/iq-auth'
+const NS_AUTH = 'jabber:iq:auth'
 
-function bind () {
-  const jid = this._legacy_authentication_jid
-  delete this._legacy_authentication_jid
-  this.jid = jid // TODO probably not here...
-  return Promise.resolve(jid)
-}
+// function bind () {
+//   const jid = this._legacy_authentication_jid
+//   delete this._legacy_authentication_jid
+//   this.jid = jid // TODO probably not here...
+//   return Promise.resolve(jid)
+// }
 
-export function authenticate (client, credentials, features) {
+function authenticate (client, credentials) {
   const resource = credentials.resource || client.id()
 
   // In XEP-0078, authentication and binding are parts of the same operation
   // so we assign a dumb function
-  client.bind = bind
+  // client.bind = bind
 
   const jid = new JID(credentials.username, client.domain, resource)
   client._legacy_authentication_jid = jid
@@ -38,14 +38,31 @@ export function authenticate (client, credentials, features) {
   return client.request(stanza, {next: true})
 }
 
-export function match (features) {
-  return !!features.getChild('auth', NS)
+function match (features) {
+  return features.getChild('auth', NS)
 }
 
-export const authenticator = {authenticate, match, name: 'legacy'}
+// const authenticator = {authenticate, match, name: 'legacy'}
 
-export function plugin (client) {
-  client.authenticators.push(authenticator)
+function plugin (client) {
+  if (client.registerStreamFeature) {
+    client.registerStreamFeature(streamFeature)
+  }
+  // client.authenticators.push(authenticator)
+}
+
+const streamFeature = {
+  priority: 0,
+  match,
+  run: (client) => {
+    const credentials = {
+      username: client.options.username,
+      password: client.options.password,
+      resource: client.options.resource
+    }
+    return authenticate(client, credentials)
+  }
 }
 
 export default plugin
+export {NS, NS_AUTH, authenticate, match, plugin, streamFeature}

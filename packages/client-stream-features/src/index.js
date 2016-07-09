@@ -1,12 +1,29 @@
-export function register (client, fn) {
-  client._streamFeatures.add(fn)
+function register (client, priority, run, match) {
+  client._streamFeatures.push({priority, run, match})
 }
 
-export function plugin (client) {
-  client._streamFeatures = new Set()
-  client.on('features', (features) => {
-    // let c = 0
+function registerClient (feature) {
+  register(this, feature.priority, feature.run, feature.match)
+}
 
-    // client._streamFeatures.
+function selectFeature (features, el) {
+  return features
+    .filter(f => f.match(el))
+    .sort((a, b) => {
+      return a.priority < b.priority
+    })[0]
+}
+
+function plugin (client) {
+  const features = client._streamFeatures = []
+  client.on('features', el => {
+    const feature = selectFeature(features, el)
+    if (!feature) return
+    feature.run(client, el)
+      .catch(err => client.emit('error', err))
   })
+  client.registerStreamFeature = registerClient
 }
+
+export {register, plugin, selectFeature}
+export default plugin

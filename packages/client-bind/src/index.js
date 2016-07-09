@@ -21,7 +21,7 @@ function stanza (resource) {
   )
 }
 
-function hasSupport (features) {
+function match (features) {
   return features.getChild('bind', NS)
 }
 
@@ -38,7 +38,18 @@ function clientBind (...args) {
 
 function plugin (client) {
   client.bind = clientBind
+  if (client.registerStreamFeature) {
+    client.registerStreamFeature(streamFeature)
+  }
+}
+
+const streamFeature = {
+  priority: 2000,
+  match: match,
+  run: (client) => {
+    return bind(client, client.options.resource)
+  }
 }
 
 export default plugin
-export {NS, stanza, hasSupport, bind, clientBind, plugin}
+export {NS, stanza, match, bind, clientBind, plugin, streamFeature}

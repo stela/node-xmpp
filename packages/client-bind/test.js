@@ -1,5 +1,5 @@
 import test from 'ava'
-import {hasSupport, stanza, plugin} from './src'
+import {match, stanza, plugin} from './src'
 
 test('plugin', t => {
   const client = {}
@@ -7,13 +7,13 @@ test('plugin', t => {
   t.true(typeof client.bind === 'function')
 })
 
-test('hasSupport()', t => {
+test('match()', t => {
   const features = <features/>
-  t.is(hasSupport(features), undefined)
+  t.is(match(features), undefined)
 
   const bind = <bind xmlns='urn:ietf:params:xml:ns:xmpp-bind'/>
   features.cnode(bind)
-  t.is(hasSupport(features), bind)
+  t.is(match(features), bind)
 })
 
 test('stanza()', t => {
