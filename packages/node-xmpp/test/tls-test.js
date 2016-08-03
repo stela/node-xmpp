@@ -42,7 +42,7 @@ function startServer (done) {
 
   c2s.on('connection', function (client) {
     client.once('authenticate', function (opts, cb) {
-      if ((opts.saslmech = 'PLAIN') &&
+      if ((opts.saslmech === 'PLAIN') &&
         (opts.jid.toString() === user.jid) &&
         (opts.password === user.password)) {
         cb(null, opts)

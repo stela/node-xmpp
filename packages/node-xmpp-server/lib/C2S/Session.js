@@ -11,6 +11,7 @@ var rack = require('hat').rack
 
 var NS_CLIENT = 'jabber:client'
 var NS_XMPP_SASL = 'urn:ietf:params:xml:ns:xmpp-sasl'
+var NS_XMPP_NONSASL = 'http://jabber.org/features/iq-auth'
 var NS_REGISTER = 'jabber:iq:register'
 var NS_SESSION = 'urn:ietf:params:xml:ns:xmpp-session'
 var NS_BIND = 'urn:ietf:params:xml:ns:xmpp-bind'
@@ -102,7 +103,7 @@ Session.prototype.decode64 = function (encoded) {
 }
 
 Session.prototype.sendFeatures = function () {
-  // trilian requires features to be prefixed https://github.com/node-xmpp/node-xmpp-server/pull/125
+  // trillian requires features to be prefixed https://github.com/node-xmpp/node-xmpp-server/pull/125
   var features = new Element('stream:features', {xmlns: NS_STREAMS, 'xmlns:stream': NS_STREAMS})
   if (!this.authenticated) {
     if (this.server && this.server.availableSaslMechanisms) {
@@ -123,6 +124,8 @@ Session.prototype.sendFeatures = function () {
     this.mechanisms.forEach(function (mech) {
       mechanismsEl.c('mechanism').t(mech.prototype.name)
     })
+    // XEP-0078 non-SASL authentication
+    features.c('auth', { xmlns: NS_XMPP_NONSASL})
   } else {
     features.c('bind', { xmlns: NS_BIND })
     features.c('session', { xmlns: NS_SESSION })
@@ -140,7 +143,9 @@ Session.prototype.onStanza = function (stanza) {
     this.send(toSend)
     this.connection.setSecure(this.server.credentials, true)
   } else if (stanza.is('auth', NS_XMPP_SASL) || stanza.is('response', NS_XMPP_SASL)) {
-    this.onAuth(stanza)
+    this.onSaslAuth(stanza)
+  } else if (stanza.is('iq') && stanza.attrs.type === 'set' && stanza.getChild('query', NS_XMPP_NONSASL)) {
+    this.onNonsaslAuth(stanza)
   } else if (stanza.is('iq') && stanza.getChild('query', NS_REGISTER)) {
     this.onRegistration(stanza)
   } else if (this.authenticated) {
@@ -176,10 +181,10 @@ Session.prototype.sendAuthError = function (error) {
     .c('text').t(message))
 }
 
-Session.prototype.onAuth = function (stanza) {
+Session.prototype.onSaslAuth = function (stanza) {
   var self = this
 
-  // if we havn't already decided for one method
+  // if we haven't already decided for one method
   if (!this.mechanism) {
     var matchingMechs = this.mechanisms.filter(function (mech) {
       return mech.prototype.name === stanza.attrs.mechanism
@@ -190,7 +195,7 @@ Session.prototype.onAuth = function (stanza) {
 
     /**
      * Authenticates a user
-     * @param  Object authRequest obejct with credentials like {user: 'bob', password: 'secret'}
+     * @param  Object authRequest object with credentials like {user: 'bob', password: 'secret'}
      */
     this.mechanism.authenticate = function (user, cb) {
       if (!user.saslmech) {
@@ -227,6 +232,46 @@ Session.prototype.onAuth = function (stanza) {
     this.mechanism.manageAuth(stanza, this)
   }
 }
+
+Session.prototype.onNonsaslAuth = function (stanza) {
+  var self = this
+
+  var queryEl = stanza.getChild('query', NS_XMPP_NONSASL)
+  // TODO 3.1 - return policy-violation stream error if SASL auth previously attempted
+  var authRequest = {
+    'username': queryEl.getChild('username'),
+    'password': queryEl.getChild('password')
+  }
+
+  // TODO use 'resource' child el to bind to
+
+  var cb = function (err, user) {
+    if (!err && user) {
+      self.emit('auth-success', user.jid)
+      self.jid = user.jid
+      self.authenticated = true
+      // TODO replace success response, non-sasl
+      self.send(new Element('success', { xmlns: NS_XMPP_SASL }))
+      // incoming stream restart
+      if (self.connection.startParser) {
+        self.connection.startParser()
+      }
+    } else {
+      self.sendAuthError(err)
+    }
+  }
+
+  if (authRequest.jid) {
+    authRequest.jid = new JID(authRequest.jid)
+  } else {
+    authRequest.jid = new JID(authRequest.username, self.serverdomain.toString())
+  }
+  authRequest.client = self
+
+  // emit event
+  self.emit('authenticate', authRequest, cb)
+}
+
 
 Session.prototype.onRegistration = function (stanza) {
   var self = this
